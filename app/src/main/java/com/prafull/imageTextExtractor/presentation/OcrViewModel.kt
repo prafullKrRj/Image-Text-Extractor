@@ -1,13 +1,7 @@
 package com.prafull.imageTextExtractor.presentation
 
-import android.graphics.Bitmap
 import android.net.Uri
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -22,7 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -34,60 +27,35 @@ class OcrViewModel(
     private val _uiState = MutableStateFlow(State())
     val uiState = _uiState.asStateFlow()
 
-    val history: StateFlow<List<HistoryModel>> = repository.getHistory().map { list ->
-        list.map {
-            HistoryModel(
-                image = Uri.parse(it.image),
-                text = it.text
-            )
-        }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+    val history: StateFlow<List<HistoryEntity>> =
+        repository.getHistory().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
-
-    private fun getText() {
-        if (uiState.value.image != null) {
-            viewModelScope.launch {
-                repository.extractTextFromImage(uiState.value.image!!).collect { generatedText ->
-                    _uiState.update {
-                        it.copy(
-                            text = uiState.value.text + generatedText
-                        )
-                    }
-                }
-            }
-        }
-    }
     fun startExtraction(image: Uri?) {
+        if (image == null) return
         _uiState.update {
             it.copy(
                 image = image,
                 text = ""
             )
         }
-        getText()
-        updateDatabase()
-    }
-    private fun updateDatabase() {
-        if (!_uiState.value.text.isNullOrEmpty() && _uiState.value.text != "")
         viewModelScope.launch {
-            repository.insertHistory(
-                HistoryEntity(
-                    image = uiState.value.image.toString(),
-                    text = uiState.value.text!!
-                )
-            )
-        }
-    }
-    private fun getAllFromDb() {
-        viewModelScope.launch {
-            val x = repository.getHistory().collect { list ->
-                list.map {
-                    HistoryModel(
-                        image = Uri.parse(it.image),
-                        text = it.text
+            repository.extractTextFromImage(image).collect { generatedText ->
+                _uiState.update {
+                    it.copy(
+                        text = uiState.value.text + generatedText
                     )
                 }
             }
+            repository.insertHistory(
+                HistoryEntity(
+                    text = uiState.value.text?: "",
+                    image = uiState.value.image.toString()
+                )
+            )
         }
     }
     companion object {
@@ -103,5 +71,8 @@ class OcrViewModel(
 @Stable
 data class State(
     val image: Uri? = null,
-    val text: String? = null
+    val text: String? = null,
+)
+data class HistoryState(
+    val history: List<HistoryModel> = emptyList()
 )

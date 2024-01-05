@@ -23,7 +23,7 @@ fun MainScreenTopBar(drawerIcon: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
         },
-        navigationIcon = {
+     /*   navigationIcon = {
             IconButton(onClick = {
                 drawerIcon()
             }) {
@@ -32,7 +32,7 @@ fun MainScreenTopBar(drawerIcon: () -> Unit) {
                     contentDescription = "Menu"
                 )
             }
-        }
+        }*/
     )
 }
 

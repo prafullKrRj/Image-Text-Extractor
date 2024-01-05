@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "History")
 data class HistoryEntity (
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 1,
+    var id: Int = 1,
     val image: String,
     val text: String
 ) {
@@ -20,6 +20,6 @@ data class HistoryEntity (
 }
 
 data class HistoryModel(
-    val image: Uri,
-    val text: String
+    var image: Uri = Uri.EMPTY,
+    var text: String = ""
 )

@@ -1,10 +1,9 @@
 package com.prafull.imageTextExtractor.data
 
 import android.content.Context
-import androidx.compose.ui.platform.isDebugInspectorInfoEnabled
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import com.prafull.imageTextExtractor.data.local.HistoryDB
+import com.prafull.imageTextExtractor.data.local.HistoryDatabase
 
 interface AppContainer {
     val ocrRepository: OcrRepository
@@ -18,7 +17,7 @@ class AppContainerImpl(
         OcrRepositoryImpl(
             context = context,
             textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS),
-            historyDao = HistoryDB.getDatabase(context).historyDao()
+            historyDao = HistoryDatabase.getDatabase(context).historyDao()
         )
     }
 
